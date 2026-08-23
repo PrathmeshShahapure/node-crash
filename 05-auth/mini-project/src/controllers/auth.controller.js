@@ -1,5 +1,7 @@
 import pool from "../db.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import "dotenv/config"
 import { loginSchema, registerSchema } from "../schemas/auth.schema.js";
 
 export const registerController = async (req, res) => {
@@ -48,15 +50,18 @@ export const loginController = async (req, res) => {
     if (result.rows.length == 0) { 
       return res.status(400).json({message:"User does not found "})
     }
-    const { name, email: userEmail, password:HashedPassword } = result.rows[0];
+    const { id:user_id,name, email: userEmail, password:HashedPassword ,role} = result.rows[0];
     const isMatch = await bcrypt.compare(password, HashedPassword);
     if (!isMatch) { 
-      return res.status(400).json({
+      return res.status(401).json({
         message: "Wrong password",
       });
 
     }
-     return res.json({message:`Wellcome ${name}`})
+    const sec = process.env.JWT_SEC;
+    console.log(role);
+    const token = jwt.sign({ user_id, name,role }, sec, {expiresIn:'2d'})
+    return res.json({message:`Wellcome ${name}`,token})
      
     
   } catch (error) {
