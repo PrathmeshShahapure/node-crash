@@ -1,5 +1,5 @@
 import express from "express"
-import multer from "multer"
+import multer, { MulterError } from "multer"
 const app = express();
 
 app.use(express.json());
@@ -28,6 +28,20 @@ const upload = multer({
 
 app.post("/uploads",upload.array("files",2), (req, res) => { 
     res.json({message:"File has been Uploaded Successsfully ",file:req.files})
+})
+
+
+app.use((err, req, res, next) => {
+    if (err instanceof MulterError) {
+        return res.status(400).json(err.message);
+    }
+
+    if (err) {
+        return res.status(400).json({
+            message: err.message,
+        });
+    }
+    next();
 })
 
 export default app;
